@@ -20,30 +20,37 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Find and Build APK
+    - name: Generate Gradle Wrapper and Build APK
       run: |
-        # البحث عن مكان ملف gradlew الحقيقي في المشروع
-        GRADLEW_PATH=$(find . -name "gradlew" -type f)
-        if [ -z "$GRADLEW_PATH" ]; then
-          echo "Error: gradlew not found!"
-          exit 1
+        # البحث عن مجلد المشروع الذي يحتوي على ملف build.gradle.kts أو AndroidManifest.xml
+        PROJECT_PATH=$(find . -name "AndroidManifest.xml" -maxdepth 3 -exec dirname {} \; | head -n 1)
+        
+        if [ -z "$PROJECT_PATH" ]; then
+          # إذا لم يجد مجلد فرعي، نفترض أن الملفات في الجذر
+          PROJECT_PATH="."
         fi
         
-        # استخراج مجلد العمل الذي يوجد فيه gradlew
-        PROJECT_DIR=$(dirname "$GRADLEW_PATH")
-        echo "Found gradlew at: $PROJECT_DIR"
+        # الصعود لمجلد المشروع الرئيسي للاتكاء عليه
+        PARENT_DIR=$(dirname "$PROJECT_PATH")
         
-        # الانتقال للمجلد ومنح الصلاحية وبناء الـ APK
-        cd "$PROJECT_DIR"
+        echo "Project detected at: $PROJECT_PATH"
+        
+        # الدخول لمجلد المشروع وإنشاء ملفات Gradle اللاسلكية (gradlew) تلقائياً
+        cd "$PROJECT_PATH"
+        
+        # التأكد من وجود مجلد app أو إعداد Gradle
+        gradle wrapper --gradle-version 8.0
+        
         chmod +x gradlew
         ./gradlew assembleDebug
-        
-        # نسخ ملف الـ APK الناتج إلى المجلد الرئيسي لتسهيل رفعه كـ Artifact
-        mkdir -p ../output-apk
-        find . -name "app-debug.apk" -exec cp {} ../output-apk/ \;
+
+    - name: Locate and Prepare APK
+      run: |
+        mkdir -p final-apk
+        find . -name "app-debug.apk" -exec cp {} final-apk/ \;
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: output-apk/app-debug.apk
+        path: final-apk/app-debug.apk
