@@ -1,0 +1,6 @@
+{
+  "name": "iZone Max",
+  "description": "تطبيق متطور لشبكات VPN ونفق V2Ray و SSH مع ميزات التكوينات المخصصة وإدارة المشرف والاشتراكات VIP",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
