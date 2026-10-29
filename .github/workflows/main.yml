@@ -22,24 +22,19 @@ jobs:
 
     - name: Generate Gradle Wrapper and Build APK
       run: |
-        # البحث عن مجلد المشروع الذي يحتوي على ملف build.gradle.kts أو AndroidManifest.xml
+        # البحث عن مجلد المشروع الذي يحتوي على ملف AndroidManifest.xml
         PROJECT_PATH=$(find . -name "AndroidManifest.xml" -maxdepth 3 -exec dirname {} \; | head -n 1)
         
         if [ -z "$PROJECT_PATH" ]; then
-          # إذا لم يجد مجلد فرعي، نفترض أن الملفات في الجذر
           PROJECT_PATH="."
         fi
         
-        # الصعود لمجلد المشروع الرئيسي للاتكاء عليه
-        PARENT_DIR=$(dirname "$PROJECT_PATH")
-        
         echo "Project detected at: $PROJECT_PATH"
         
-        # الدخول لمجلد المشروع وإنشاء ملفات Gradle اللاسلكية (gradlew) تلقائياً
         cd "$PROJECT_PATH"
         
-        # التأكد من وجود مجلد app أو إعداد Gradle
-        gradle wrapper --gradle-version 8.0
+        # إنشاء إصدار Gradle متوافق مع المشروع (9.3.1 بناءً على طلب الخطأ)
+        gradle wrapper --gradle-version 9.3.1
         
         chmod +x gradlew
         ./gradlew assembleDebug
