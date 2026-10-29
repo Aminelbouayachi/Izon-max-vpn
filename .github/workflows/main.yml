@@ -20,14 +20,30 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: Grant Execute Permission for GradleW
-      run: chmod +x gradlew
-
-    - name: Build Debug APK
-      run: ./gradlew assembleDebug
+    - name: Find and Build APK
+      run: |
+        # البحث عن مكان ملف gradlew الحقيقي في المشروع
+        GRADLEW_PATH=$(find . -name "gradlew" -type f)
+        if [ -z "$GRADLEW_PATH" ]; then
+          echo "Error: gradlew not found!"
+          exit 1
+        fi
+        
+        # استخراج مجلد العمل الذي يوجد فيه gradlew
+        PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+        echo "Found gradlew at: $PROJECT_DIR"
+        
+        # الانتقال للمجلد ومنح الصلاحية وبناء الـ APK
+        cd "$PROJECT_DIR"
+        chmod +x gradlew
+        ./gradlew assembleDebug
+        
+        # نسخ ملف الـ APK الناتج إلى المجلد الرئيسي لتسهيل رفعه كـ Artifact
+        mkdir -p ../output-apk
+        find . -name "app-debug.apk" -exec cp {} ../output-apk/ \;
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: output-apk/app-debug.apk
